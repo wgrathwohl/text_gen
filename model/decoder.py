@@ -142,7 +142,9 @@ class CNNDecoder(nn.Module):
         for block in self.blocks:
             x_cur = block(x_cur)
 
-        return x_cur
+        # crop off the last bit so we have probabilities
+        # that match up with out input
+        return x_cur[:, :, x.size(2)]
 
 
 from torch.autograd import Variable
