@@ -59,6 +59,7 @@ class CausalConv1D(nn.Module):
     Outputs will be preds for [word1, word2, ..., wordN, EOS] len = N + 1
     """
     def __init__(self, D_in, D_out, k_size, dilation):
+        super(CausalConv1D, self).__init__()
         r_field = k_size + (k_size - 1) * (dilation - 1)
         padding = r_field - 1
         self.conv = torch.nn.Conv1d(D_in, D_out, k_size, dilation=dilation, padding=padding)
@@ -73,6 +74,7 @@ class CausalConv1D(nn.Module):
 class ARBlock(nn.Module):
     def __init__(self, D_in, k_size, dilation, nonlin=torch.nn.ReLU,
                  internal_size=512, external_size=1024):
+        super(ARBlock, self).__init__()
         self.c1 = CausalConv1D(D_in, internal_size, 1, 1)
         self.c2 = CausalConv1D(512, internal_size, k_size, dilation)
         self.c3 = CausalConv1D(512, external_size, 1, 1)
@@ -129,10 +131,11 @@ class CNNDecoder(nn.Module):
         x_dim_exp = x.view(x.size(0), x.size(1), x.size(2), 1).permute(0, 3, 1, 2)
         # CHECK SIZES HERE MAKE SURE THIS IS RIGHT!!
         # need to swap the axis cuz this operation only works on images
-        x_dim_exp_padded = F.pad(x_dim_exp, (0, 0, 1, 0))
+        x_dim_exp_padded = F.pad(x_dim_exp, (1, 0, 0, 0))
         x_padded = x_dim_exp_padded[:, 0, :, :]
         # need to copy z num_words + 1 times in the 2nd dimension then concat to x_padded
         z_exp = z.view(z.size(0), z.size(1), 1).expand((z.size(0), z.size(1), x.size(2) + 1))
+        # concatenate z with x
         dec_input = torch.cat([x_padded, z_exp], 1)
 
         x_cur = dec_input
@@ -142,4 +145,10 @@ class CNNDecoder(nn.Module):
         return x_cur
 
 
+from torch.autograd import Variable
+z = Variable(torch.zeros((10, 64)))
+x = Variable(torch.zeros((10, 128, 7)))
 
+dec = CNNDecoder(128, 64)
+out = dec(x, z)
+print(out.size())
