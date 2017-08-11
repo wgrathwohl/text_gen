@@ -1,47 +1,46 @@
-import torch as t
 import torch.nn as nn
 import torch.nn.functional as F
-
-from selfModules.highway import Highway
-from utils.functional import parameters_allocation_check
+import torch
 
 
 class Encoder(nn.Module):
-    def __init__(self, params):
+    def __init__(self, vocab_size=20000, embedding_size=512, hidden_size=1024, lstm_layers=1, latent_dim=32):
         super(Encoder, self).__init__()
 
-        self.params = params
+        self.embedding = nn.Embedding(vocab_size, embedding_size)
+        self.rnn = nn.LSTM(input_size=embedding_size,
+                           hidden_size=hidden_size,
+                           num_layers=lstm_layers,
+                           batch_first=True)
+        self.mu = nn.Linear(hidden_size, latent_dim)
+        self.logvar = nn.Linear(hidden_size, latent_dim)
 
-        self.hw1 = Highway(self.params.sum_depth + self.params.word_embed_size, 2, F.relu)
-
-        self.rnn = nn.LSTM(input_size=self.params.word_embed_size + self.params.sum_depth,
-                           hidden_size=self.params.encoder_rnn_size,
-                           num_layers=self.params.encoder_num_layers,
-                           batch_first=True,
-                           bidirectional=True)
-
-    def forward(self, input):
+    def forward(self, input, final_inds):
         """
-        :param input: [batch_size, seq_len, embed_size] tensor
-        :return: context of input sentenses with shape of [batch_size, latent_variable_size]
+        :param input: [batch_size, max_seq_len] tensor
+        :param lens: [batch_size] tensor
+        :return:]
         """
 
-        [batch_size, seq_len, embed_size] = input.size()
+        embeddings = self.embedding(input)
+        rnn_hidden, (_, _) = self.rnn(embeddings)
+        # get final embeddings
+        # expand final_inds
+        exp_final_inds = final_inds.view(final_inds.size(0), final_inds.size(1), 1).repeat(1, 1, rnn_hidden.size(2))
+        # mask out all but final hidden states
+        rnn_final_hiddens = rnn_hidden.mul(exp_final_inds.float()).sum(dim=1)[:, 0, :]
+        mu = self.mu(rnn_final_hiddens)
+        logvar = self.logvar(rnn_final_hiddens)
 
-        input = input.view(-1, embed_size)
-        input = self.hw1(input)
-        input = input.view(batch_size, seq_len, embed_size)
+        return mu, logvar
 
-        assert parameters_allocation_check(self), \
-            'Invalid CUDA options. Parameters should be allocated in the same memory'
 
-        ''' Unfold rnn with zero initial state and get its final state from the last layer
-        '''
-        _, (_, final_state) = self.rnn(input)
-
-        final_state = final_state.view(self.params.encoder_num_layers, 2, batch_size, self.params.encoder_rnn_size)
-        final_state = final_state[-1]
-        h_1, h_2 = final_state[0], final_state[1]
-        final_state = t.cat([h_1, h_2], 1)
-
-        return final_state
+from data.dataset import TextDataset, pad_batch
+from torch.utils.data import DataLoader
+from torch.autograd import Variable
+test_ds = TextDataset("../data/yelp_data/vocab.txt", "../data/yelp_data/part_0")
+test_loader = DataLoader(test_ds, batch_size=8, shuffle=True, num_workers=4, collate_fn=pad_batch)
+enc = Encoder()
+for batch, lens in test_loader:
+    out = enc(Variable(batch), Variable(lens))
+    break
