@@ -6,6 +6,7 @@ Data is partitioned so that there are no memory problems when processing the dat
 However creating the partitions requires a lot of memory.
 Works with Yelp Challenge Dataset 7
 """
+# note: dataset is from Yelp Challenge 9 (2016)
 
 import json
 import pickle
@@ -13,8 +14,7 @@ import random
 import sys
 import numpy as np
 
-DEFAULT_REVIEWS_FILE = "./data/yelp_data/yelp_academic_dataset_review.json"
-DEFAULT_BUSINESS_FILE = "./data/yelp_data/yelp_academic_dataset_business.json"
+DEFAULT_REVIEWS_FILE = "./data/yelp_data/yelp_academic_dataset_review_100k.json"
 DEFAULT_REVIEWS_PICKLE = "./data/pickles/reviews.pickle"
 
 def pickles_from_json(num_partitions=100, accepted=None,
@@ -91,17 +91,6 @@ def load_partitions(partition_list, pickle_base_name=DEFAULT_REVIEWS_PICKLE + '.
     print "Read a total of %d partitions for a total of %d objects" % (num_partition - 1, len(result))
     return result
 
-def get_business_data(json_file=DEFAULT_BUSINESS_FILE):
-    """
-    Reads business file and saves all data in a hash indexed by business id
-    """
-
-    business_hash = {}
-    with open(json_file) as json_data:
-        for line in json_data:
-            business = json.loads(line)
-            business_hash[business["business_id"]] = business
-    return business_hash
 
 def get_reviews_data(partitions_to_use, business_data, not_include_states=["EDH", "QC", "BW"],
                      pickle_base_name=DEFAULT_REVIEWS_PICKLE + '.'):
