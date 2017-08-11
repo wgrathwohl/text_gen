@@ -55,7 +55,7 @@ class RNNDecoder(nn.Module):
 
 class CausalConv1D(nn.Module):
     """
-    Assumes that the input padded as [START, word1, word2, word3, ..., wordN] len = N + 1
+    Assumes that the input padded as [START, word1, word2, word3, ..., wordN, EOS] len = N + 2
     Outputs will be preds for [word1, word2, ..., wordN, EOS] len = N + 1
     """
     def __init__(self, D_in, D_out, k_size, dilation):
