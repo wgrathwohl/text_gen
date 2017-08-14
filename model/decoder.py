@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 class CausalConv1D(nn.Module):
@@ -87,7 +88,7 @@ class CNNDecoder(nn.Module):
         x_dim_exp_padded = F.pad(x_dim_exp, (1, 0, 0, 0))
         x_padded = x_dim_exp_padded[:, 0, :, :]
         # need to copy z (num_words + 1) times in the 2nd dimension then concat to x_padded
-        z_exp = z.view(z.size(0), z.size(1), 1).expand((z.size(0), z.size(1), x.size(2) + 1))
+        z_exp = z.view(z.size(0), z.size(1), 1).expand(z.size(0), z.size(1), x.size(2) + 1)
         # concatenate z with x
         dec_input = torch.cat([x_padded, z_exp], 1)
 
@@ -100,7 +101,6 @@ class CNNDecoder(nn.Module):
 
 
 if __name__ == "__main__":
-    from torch.autograd import Variable
     z = Variable(torch.zeros((10, 64)))
     x = Variable(torch.zeros((10, 7, 128)))
 

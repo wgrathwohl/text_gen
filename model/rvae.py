@@ -46,7 +46,7 @@ class RVAE(nn.Module):
         nll_exp = torch.gather(log_probs_exp, 1, data_exp)
         nll = nll_exp.view(out.size(0), out.size(2))
         # the above should be of size [batch size, sequence length]
-        masked_nll = nll.mul(mask.float()).sum(dim=1).mean().squeeze()
+        masked_nll = nll.mul(mask.float()).sum(dim=1).mean().squeeze().mul(-1.)
         return out, masked_nll, kld
 
     # def trainer(self, optimizer, batch_loader):
