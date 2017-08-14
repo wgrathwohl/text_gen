@@ -25,9 +25,11 @@ class RVAE(nn.Module):
     def forward(self, data, final_inds, mask):
         """
 
-        :param data:
-        :param final_inds:
-        :param mask:
+        :param data: [batch_size, seq_length] tensor containing word indices
+        :param final_inds: [batch_size, seq_length] tensor contains all 0's and a 1 at the index of the last word
+            in a sequence
+        :param mask: [batch_size, seq_length] tensor contains a 1 wherever there is a word and 0's after the
+            sequence is over
         :return:
         """
 
@@ -35,21 +37,16 @@ class RVAE(nn.Module):
         z = self.encoder.sample_z(mu, logvar)
         kld = (-0.5 * torch.sum(logvar - torch.pow(mu, 2) - torch.exp(logvar) + 1, 1)).mean().squeeze()
         out = self.decoder(embeddings, z)
-        print(out.size())
         # size is [batch_size, vocab_size, seq_length], need to flip to [batch_size, seq_length, vocab_size]
         out_perm = out.permute(0, 2, 1).contiguous()
         # squash to [batch_size * seq_length, vocab_size]
         out_exp = out_perm.view(out.size(0) * out.size(2), out.size(1))
         log_probs_exp = F.log_softmax(out_exp)
-        print(log_probs_exp.size())
-        print(data.size())
-        data_exp = data.view((-1))
-        print(data_exp.size())
-        nll_exp = torch.index_select(log_probs_exp, 1, data_exp)
-        print(nll_exp.size())
+        data_exp = data.view((-1, 1))
+        nll_exp = torch.gather(log_probs_exp, 1, data_exp)
         nll = nll_exp.view(out.size(0), out.size(2))
         # the above should be of size [batch size, sequence length]
-        masked_nll = nll.mul(mask).sum(dim=1).mean().squeeze()
+        masked_nll = nll.mul(mask.float()).sum(dim=1).mean().squeeze()
         return out, masked_nll, kld
 
     # def trainer(self, optimizer, batch_loader):
@@ -153,6 +150,9 @@ if __name__ == "__main__":
     test_ds = TextDataset("../data/yelp_data/vocab.txt", "../data/yelp_data/part_0")
     test_loader = DataLoader(test_ds, batch_size=4, shuffle=True, num_workers=4, collate_fn=pad_batch)
     vae = RVAE(20000, 512, 1024, 1, 32)
+    d = vae.state_dict()
+    for k, v in d.items():
+        print(k, v.size())
     for batch, lens, mask in test_loader:
         #print(lens[:2])
         #print(mask[:2])

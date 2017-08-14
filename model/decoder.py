@@ -60,43 +60,41 @@ class CNNDecoder(nn.Module):
         :param external_size:
         """
         super(CNNDecoder, self).__init__()
-        self.blocks = []
+        self._blocks = []
         for i, dilation in enumerate(layers_list):
-            self.blocks.append(
+            self._blocks.append(
                 ARBlock(
                     embed_dim + z_dim if i == 0 else external_size,
                     k_size, dilation,
                     internal_size=internal_size, external_size=external_size
                 )
             )
+        self.blocks = nn.Sequential(*self._blocks)
         self.pred_word = nn.Conv1d(external_size, vocab_size, 1)
 
     def forward(self, x, z):
         """
 
-        :param x: sentence tensor embeddings from encoder [batch_size, seq_length, num_features]
+        :param x: sentence tensor embeddings from encoder [batch_size, seq_length, embedding_size]
         :param z: context tensor [batch_size, z_dim]
         :return:
         """
+        # must permute to [batch_size, embedding_size, seq_length] for 1D conv
         x = x.permute(0, 2, 1).contiguous()
         # Add a single 0 example onto x
         x_dim_exp = x.view(x.size(0), x.size(1), x.size(2), 1).permute(0, 3, 1, 2)
-        # CHECK SIZES HERE MAKE SURE THIS IS RIGHT!!
         # need to swap the axis cuz this operation only works on images
         x_dim_exp_padded = F.pad(x_dim_exp, (1, 0, 0, 0))
         x_padded = x_dim_exp_padded[:, 0, :, :]
-        # need to copy z num_words + 1 times in the 2nd dimension then concat to x_padded
+        # need to copy z (num_words + 1) times in the 2nd dimension then concat to x_padded
         z_exp = z.view(z.size(0), z.size(1), 1).expand((z.size(0), z.size(1), x.size(2) + 1))
         # concatenate z with x
         dec_input = torch.cat([x_padded, z_exp], 1)
 
-        x_cur = dec_input
-        for block in self.blocks:
-            x_cur = block(x_cur)
+        x_cur = self.blocks(dec_input)
         # crop off the last bit so we have probabilities
         # that match up with our input
         x_cur = x_cur[:, :, :x.size(2)]
-        #print(x_cur.size())
         pred_words = self.pred_word(x_cur)
         return pred_words
 
