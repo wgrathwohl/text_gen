@@ -45,11 +45,13 @@ def pad_batch(examples):
     # make batch
     batch = np.zeros((batch_size, max_len), dtype=np.int64)
     final_inds = np.zeros((batch_size, max_len), dtype=np.int64)
+    mask = np.zeros((batch_size, max_len), dtype=np.int64)
     for j, ex in enumerate(examples):
         l = len(ex)
         batch[j, :l] = ex
         final_inds[j, l-1] = 1
-    return torch.from_numpy(batch), torch.from_numpy(final_inds)
+        mask[j, :l] = 1
+    return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
 
 #
 # test_ds = TextDataset("yelp_data/vocab.txt", "yelp_data/part_0")
