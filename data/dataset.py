@@ -89,12 +89,12 @@ def pad_batch(examples):
     batch_size = len(examples)
     # make batch
     batch = np.zeros((batch_size, max_len), dtype=np.int64)
+
     for j, ex in enumerate(examples):
         l = len(ex)
         batch[j, :l] = ex
 
     return torch.from_numpy(batch), lens
-
 
 
 # sanity test
