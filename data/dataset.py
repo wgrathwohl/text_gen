@@ -123,10 +123,10 @@ class YelpDataset(Dataset):
         # convert total data index to current file index
         curr_file_idx = idx - self._n_seen_prev_files
 
-
+        #
         if curr_file_idx >= self._n_lines_curr_file:
             # self._curr_data has no more examples
-            print("I am switching from file {} to {}".format(self._file_idx, self._file_idx+1))
+            print("Switching from file {} to {}".format(self._file_idx, self._file_idx+1))
 
             # open and decode new file
             self._curr_data = self._load_next()
@@ -142,9 +142,6 @@ class YelpDataset(Dataset):
         for field in self.fields:
             example[field] = line[field]
         return example
-
-
-
 
 
 def pad_batch(examples):
