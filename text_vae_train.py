@@ -89,7 +89,6 @@ def sample_reconst(data, output, vocab):
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
     train_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/part_0")
-    print(train_dataset.ind2word)
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -123,12 +122,11 @@ def train(args, epoch, optimizer, model):
             print("Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(l, n, k, batch_time))
 
         if idx % args.sample_interval == 0:
+            train_dataset.ind2word[11] = 'o'
             data_np = data.data.cpu().numpy()
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
             recons = sample_reconst(data_np, out_preds_np, train_dataset.ind2word)
-            for i in range(1000):
-                print(i, train_dataset.ind2word[i])
             with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
                 for s, sp in recons:
                     f.write(s + '\n')
