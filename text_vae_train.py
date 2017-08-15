@@ -195,5 +195,5 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):
-        step = train(args, epoch, optimizer, model)
-        validate(args, epoch, model, step)
+        #step = train(args, epoch, optimizer, model)
+        validate(args, epoch, model, 0)#step)
