@@ -101,9 +101,24 @@ class CNNDecoder(nn.Module):
 
 
 if __name__ == "__main__":
-    z = Variable(torch.zeros((10, 64)))
-    x = Variable(torch.zeros((10, 7, 128)))
+    z = Variable(torch.zeros((10, 64)).normal_())
+    x = Variable(torch.zeros((10, 7, 128)).normal_())
 
     dec = CNNDecoder(128, 64)
-    out = dec(x, z)
-    print(out.size())
+    out1 = dec(x, z)
+    z2 = Variable(torch.zeros((10, 64)).normal_())
+    out2 = dec(x, z2)
+    same = (out1[:, :, 0]==out2[:, :, 0]).data.numpy().all()
+    # for different z's and the same x, the first output should be different
+    assert not same
+
+    z = Variable(torch.zeros((10, 64)).normal_())
+    x = Variable(torch.zeros((10, 7, 128)).normal_())
+
+    out1 = dec(x, z)
+    x2 = Variable(torch.zeros((10, 7, 128)).normal_())
+    out2 = dec(x2, z)
+
+    same = (out1[:, :, 0]==out2[:, :, 0]).data.numpy().all()
+    # for different x and the same z, the first output should be the same
+    assert same

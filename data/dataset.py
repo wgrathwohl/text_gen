@@ -145,19 +145,19 @@ class YelpDataset(Dataset):
 
 
 def pad_batch(examples):
+    # sort in decreasing order
+    examples.sort(key=lambda s: -1 * len(s))
     lens = np.array([len(s) for s in examples], dtype=np.int64)
     max_len = max(lens)
     batch_size = len(examples)
     # make batch
     batch = np.zeros((batch_size, max_len), dtype=np.int64)
-    final_inds = np.zeros((batch_size, max_len), dtype=np.int64)
-    mask = np.zeros((batch_size, max_len), dtype=np.int64)
     for j, ex in enumerate(examples):
         l = len(ex)
         batch[j, :l] = ex
-        final_inds[j, l-1] = 1
-        mask[j, :l] = 1
-    return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
+
+    return torch.from_numpy(batch), lens
+
 
 if __name__ == "__main__":
     test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['categories','city','cool'], files_dir="./yelp_data/test_pickles")

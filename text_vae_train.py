@@ -97,17 +97,13 @@ def train(args, epoch, optimizer, model):
     for idx, batch in enumerate(train_loader):
         step = len(train_loader) * epoch + idx
         start_time = time.time()
-        data, lens, mask = batch
+        data, lens = batch
         if args.cuda:
             data = data.cuda()
-            lens = lens.cuda()
-            mask = mask.cuda()
         data = Variable(data)
-        lens = Variable(lens)
-        mask = Variable(mask)
 
         optimizer.zero_grad()
-        out, nll, kld = model(data, lens, mask)
+        out, nll, kld = model(data, lens)
         kl_weight = min((float(step) / args.kl_iter) * .99 + .01, 1.0)
         weighted_kld = kld.mul(kl_weight)
         loss = nll + weighted_kld
@@ -137,16 +133,12 @@ def validate(args, epoch, model, step):
     valid_losses = []
     for idx, batch in enumerate(valid_loader):
         start_time = time.time()
-        data, lens, mask = batch
+        data, lens = batch
         if args.cuda:
             data = data.cuda()
-            lens = lens.cuda()
-            mask = mask.cuda()
         data = Variable(data, volatile=True)
-        lens = Variable(lens, volatile=True)
-        mask = Variable(mask, volatile=True)
 
-        out, nll, kld = model(data, lens, mask)
+        out, nll, kld = model(data, lens)
         loss = nll + kld
         valid_losses.append(loss.data[0])
         batch_time = time.time() - start_time

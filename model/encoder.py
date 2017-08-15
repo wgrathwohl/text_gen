@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torch.autograd import Variable
 import torch
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Encoder(nn.Module):
@@ -15,23 +16,18 @@ class Encoder(nn.Module):
         self.mu = nn.Linear(hidden_size, latent_dim)
         self.logvar = nn.Linear(hidden_size, latent_dim)
 
-    def forward(self, input, final_inds):
+    def forward(self, input, lens):#, final_inds):
         """
         :param input: [batch_size, max_seq_len] tensor
         :param lens: [batch_size, max_seq_len] tensor witih all 0's and a 1 in the place of the last word
         :return:]
         """
-
         embeddings = self.embedding(input)
-        rnn_hidden, (_, _) = self.rnn(embeddings)
-        # get final embeddings
-        # expand final_inds
-        exp_final_inds = final_inds.view(final_inds.size(0), final_inds.size(1), 1).repeat(1, 1, rnn_hidden.size(2))
-        # mask out all but final hidden states
-        rnn_final_hiddens = rnn_hidden.mul(exp_final_inds.float()).sum(dim=1)[:, 0, :]
+        packed_input = pack_padded_sequence(embeddings, lens, batch_first=True)
+        _, (h_n, _) = self.rnn(packed_input)
+        rnn_final_hiddens = h_n[0, :, :]
         mu = self.mu(rnn_final_hiddens)
         logvar = self.logvar(rnn_final_hiddens)
-
         return mu, logvar, embeddings
 
     def sample_z(self, mu, log_var):
@@ -48,11 +44,9 @@ if __name__ == "__main__":
     from data.dataset import TextDataset, pad_batch
     from torch.utils.data import DataLoader
     test_ds = TextDataset("../data/yelp_data/vocab.txt", "../data/yelp_data/part_0")
-    test_loader = DataLoader(test_ds, batch_size=8, shuffle=True, num_workers=4, collate_fn=pad_batch)
+    test_loader = DataLoader(test_ds, batch_size=2, shuffle=True, num_workers=1, collate_fn=pad_batch)
     enc = Encoder()
-    for batch, lens, mask in test_loader:
-        print(lens[:2])
-        print(mask[:2])
-        m, lv = enc(Variable(batch), Variable(lens))
+    for batch, lens in test_loader:
+        m, lv, em = enc(Variable(batch), lens)
         z = enc.sample_z(m, lv)
         break

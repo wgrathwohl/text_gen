@@ -22,18 +22,15 @@ class RVAE(nn.Module):
             layers_list=layers_list, vocab_size=vocab_size
         )
 
-    def forward(self, data, final_inds, mask):
+    def forward(self, data, lens):
         """
 
         :param data: [batch_size, seq_length] tensor containing word indices
-        :param final_inds: [batch_size, seq_length] tensor contains all 0's and a 1 at the index of the last word
-            in a sequence
-        :param mask: [batch_size, seq_length] tensor contains a 1 wherever there is a word and 0's after the
-            sequence is over
+        :param lens: list of ints of sequence lengths
         :return:
         """
 
-        mu, logvar, embeddings = self.encoder(data, final_inds)
+        mu, logvar, embeddings = self.encoder(data, lens)
         z = self.encoder.sample_z(mu, logvar)
         kld = (-0.5 * torch.sum(logvar - torch.pow(mu, 2) - torch.exp(logvar) + 1, 1)).mean().squeeze()
         out = self.decoder(embeddings, z)
@@ -46,7 +43,12 @@ class RVAE(nn.Module):
         nll_exp = torch.gather(log_probs_exp, 1, data_exp)
         nll = nll_exp.view(out.size(0), out.size(2))
         # the above should be of size [batch size, sequence length]
-        masked_nll = nll.mul(mask.float()).sum(dim=1).mean().squeeze().mul(-1.)
+        # create mask for loss
+        mask = np.zeros((nll.size()), dtype=np.float)
+        for i, l in enumerate(lens):
+            mask[i, :l] = 1.0
+        mask = Variable(torch.FloatTensor(mask))
+        masked_nll = nll.mul(mask).sum(dim=1).mean().squeeze().mul(-1.)
         return out, masked_nll, kld
 
     # def trainer(self, optimizer, batch_loader):
@@ -153,9 +155,9 @@ if __name__ == "__main__":
     d = vae.state_dict()
     for k, v in d.items():
         print(k, v.size())
-    for batch, lens, mask in test_loader:
+    for batch, lens in test_loader:
         #print(lens[:2])
         #print(mask[:2])
-        pred, nll, kld = vae(Variable(batch), Variable(lens), Variable(mask))
+        pred, nll, kld = vae(Variable(batch), lens)
         break
 
