@@ -56,9 +56,6 @@ class YelpDataset(Dataset):
                  transform=None):
         self.transform = transform
         self.fields = fields
-        self._file_names = file_dir#self._get_filenames(files_dir)
-        self._file_counts = dict()
-        self._n_examples = self._count_lines(file_dir)
         self._curr_file = self._load(file_dir)
         self._json = []
         print("Loading dataset into memory, this may take a while...")
@@ -76,18 +73,11 @@ class YelpDataset(Dataset):
                 self.vocab[line] = idx
         return vocab
 
-    def _count_lines(self, file):
-        count = 0
-        with open(file, 'rb') as f:
-            for _ in f:
-                count += 1
-        return count
-
     def _load(self, file_name):
         return open(file_name)
 
     def __len__(self):
-        return self._n_examples
+        return len(self._json)
 
     def __getitem__(self, idx):
         json_line = self._json[idx]
