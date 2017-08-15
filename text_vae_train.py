@@ -38,6 +38,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='LI',
                     help='how many batches to wait before logging training status')
+parser.add_argument('--sample-interval', type=int, default=100, metavar='LI',
+                    help='how many batches to wait before sampling reconstructions')
 parser.add_argument('--test-interval', type=int, default=1, metavar='TEI',
                     help='how many epochs to wait before running testing')
 parser.add_argument('--batch-size', type=int, default=32, metavar='BS',
@@ -57,6 +59,31 @@ def lr_scheduler(opt, epoch, init_lr=0.001, start_decay_epoch=30, decay_multipli
         param_group['lr'] = lr
 
     return opt
+
+
+def int2sent(seq, vocab):
+    """
+
+    :param seq: numpy array 1D
+    :param vocab: dict {ind: word}
+    :return: string of the sentance represented in seq
+    """
+    s = []
+    for idx in seq:
+        cur = vocab[idx]
+        if cur == '<eos>':
+            break
+        s.append(cur)
+    return ' '.join(s)
+
+
+def sample_reconst(data, output, vocab):
+    out = []
+    for x, xp in zip(data, output):
+        sx = int2sent(x, vocab)
+        sxp = int2sent(xp, vocab)
+        out.append((sx, sxp))
+    return out
 
 
 def train(args, epoch, optimizer, model):
@@ -93,6 +120,18 @@ def train(args, epoch, optimizer, model):
             log_value("nll", n, step)
             log_value("kld", k, step)
             print("Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(l, n, k, batch_time))
+
+        if idx % args.sample_interval == 0:
+            data_np = data.data.numpy()
+            _, out_preds = torch.max(out, 1)
+            out_preds_np = out_preds[:, 0, :].data.numpy()
+            recons = sample_reconst(data_np, out_preds_np, train_dataset.ind2word)
+            with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
+                for s, sp in recons:
+                    f.write(s + '\n')
+                    f.write(sp + '\n')
+                    f.write('\n')
+
 
 
 
