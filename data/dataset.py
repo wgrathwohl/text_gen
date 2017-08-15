@@ -88,6 +88,8 @@ class YelpDataset(Dataset):
             self._file_counts[file_name] = self._count_lines(file_name)
         return sum(self._file_counts.values())
 
+
+
     def _get_filenames(self, files_dir, file_pattern='reviews.pickle.*'):
         return glob.glob(os.path.join(files_dir, file_pattern))
 
@@ -139,6 +141,8 @@ class YelpDataset(Dataset):
         for field in self.fields:
             example[field] = line[field]
         return example
+
+
 
 
 def pad_batch(examples):
