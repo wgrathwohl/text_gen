@@ -30,6 +30,7 @@ class TextDataset(Dataset):
                     l_vec.append(self.vocab['<unk>'])
             l_vec.append(self.vocab['<eos>'])
             self.examples.append(np.array(l_vec, dtype=np.int32))
+        self.ind2word = {v: k for k, v in self.vocab.items()}
 
     def __len__(self):
         return len(self.examples)

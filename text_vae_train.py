@@ -38,6 +38,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='LI',
                     help='how many batches to wait before logging training status')
+parser.add_argument('--sample-interval', type=int, default=100, metavar='LI',
+                    help='how many batches to wait before sampling reconstructions')
 parser.add_argument('--test-interval', type=int, default=1, metavar='TEI',
                     help='how many epochs to wait before running testing')
 parser.add_argument('--batch-size', type=int, default=32, metavar='BS',
@@ -59,9 +61,35 @@ def lr_scheduler(opt, epoch, init_lr=0.001, start_decay_epoch=30, decay_multipli
     return opt
 
 
+def int2sent(seq, vocab):
+    """
+
+    :param seq: numpy array 1D
+    :param vocab: dict {ind: word}
+    :return: string of the sentance represented in seq
+    """
+    s = []
+    for idx in seq:
+        cur = vocab[idx]
+        if cur == '<eos>':
+            break
+        s.append(cur)
+    return ' '.join(s)
+
+
+def sample_reconst(data, output, vocab):
+    out = []
+    for x, xp in zip(data, output):
+        sx = int2sent(x, vocab)
+        sxp = int2sent(xp, vocab)
+        out.append((sx, sxp))
+    return out
+
+
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
-    train_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/part_0")
+    model.train()
+    train_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/train.txt")
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -92,7 +120,56 @@ def train(args, epoch, optimizer, model):
             log_value("total_loss", l, step)
             log_value("nll", n, step)
             log_value("kld", k, step)
-            print("Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(l, n, k, batch_time))
+            print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
+
+    print("Epoch {} completed!\n".format(epoch))
+    return step
+
+
+def validate(args, epoch, model, step):
+    print("Validating...")
+    model.eval()
+    valid_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/valid.txt")
+    valid_loader = DataLoader(
+        valid_dataset, batch_size=args.batch_size,
+        shuffle=True, num_workers=4, collate_fn=pad_batch
+    )
+    valid_losses = []
+    for idx, batch in enumerate(valid_loader):
+        start_time = time.time()
+        data, lens, mask = batch
+        data = Variable(data)
+        lens = Variable(lens)
+        mask = Variable(mask)
+        if args.cuda:
+            data = data.cuda()
+            lens = lens.cuda()
+            mask = mask.cuda()
+
+        out, nll, kld = model(data, lens, mask)
+        loss = nll + kld
+        valid_losses.append(loss.data[0])
+        batch_time = time.time() - start_time
+
+        if idx % args.log_interval == 0:
+            l, n, k = loss.data[0], nll.data[0], kld.data[0]
+            print("Valid Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
+
+        if idx % args.sample_interval == 0:
+            valid_dataset.ind2word[11] = 'o'
+            data_np = data.data.cpu().numpy()
+            _, out_preds = torch.max(out, 1)
+            out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
+            recons = sample_reconst(data_np, out_preds_np, valid_dataset.ind2word)
+            with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
+                for s, sp in recons:
+                    f.write(s + '\n\n')
+                    f.write(sp + '\n\n\n')
+    print("Validation Epoch {} completed!".format(epoch))
+    valid_loss = np.mean(valid_losses)
+    print("Validation ELBO: {}".format(valid_loss))
+    log_value("valid_loss", valid_loss, step)
+
 
 
 
@@ -113,8 +190,10 @@ if __name__ == "__main__":
         args.vocab_size, args.embedding_size, args.hidden_size,
         args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
     )
+    if args.cuda:
+        model.cuda()
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):
-        train(args, epoch, optimizer, model)
-        #test(args, epoch, model)
+        step = train(args, epoch, optimizer, model)
+        validate(args, epoch, model, step)
