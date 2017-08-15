@@ -43,6 +43,7 @@ class TextDataset(Dataset):
             return sample
 
 
+
 class YelpDataset(Dataset):
     """
     each batch is contained in one pickled file
@@ -141,6 +142,7 @@ class YelpDataset(Dataset):
         for field in self.fields:
             example[field] = line[field]
         return example
+
 
 
 
