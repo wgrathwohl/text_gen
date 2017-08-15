@@ -14,6 +14,7 @@ class TextDataset(Dataset):
             for line in f:
                 line = line.strip()
                 self.vocab[line] = ind
+                print(ind)
                 ind += 1
 
         with open(text_file, 'r') as f:
