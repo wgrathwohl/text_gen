@@ -152,6 +152,8 @@ if __name__ == "__main__":
         args.vocab_size, args.embedding_size, args.hidden_size,
         args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
     )
+    if args.cuda:
+        model.cuda()
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):
