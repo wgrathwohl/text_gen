@@ -126,6 +126,8 @@ def train(args, epoch, optimizer, model):
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
             recons = sample_reconst(data_np, out_preds_np, train_dataset.ind2word)
+            for i in range(1000):
+                print(i, train_dataset.ind2word[i])
             with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
                 for s, sp in recons:
                     f.write(s + '\n')
