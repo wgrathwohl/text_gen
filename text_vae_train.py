@@ -122,9 +122,9 @@ def train(args, epoch, optimizer, model):
             print("Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(l, n, k, batch_time))
 
         if idx % args.sample_interval == 0:
-            data_np = data.data.numpy()
+            data_np = data.data.cpu().numpy()
             _, out_preds = torch.max(out, 1)
-            out_preds_np = out_preds[:, 0, :].data.numpy()
+            out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
             recons = sample_reconst(data_np, out_preds_np, train_dataset.ind2word)
             with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
                 for s, sp in recons:
