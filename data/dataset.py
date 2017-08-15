@@ -2,8 +2,6 @@ from __future__ import print_function
 from torch.utils.data import Dataset, DataLoader
 import torch
 import numpy as np
-import glob
-import os
 import json
 
 class TextDataset(Dataset):
@@ -102,7 +100,6 @@ def pad_batch(examples):
         batch[j, :l] = ex
         final_inds[j, l-1] = 1
         mask[j, :l] = 1
-
     # ::todo:: return labels for classification
     return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
 
