@@ -159,13 +159,14 @@ def pad_batch(examples):
         mask[j, :l] = 1
     return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
 
-test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['categories','city','cool'], files_dir="./yelp_data/test_pickles")
-# NOTE: preshuffled data. Set shuffle=False or hacked forward read will fail.
-n_batches = 64
-batch_size = len(test_ds) / n_batches
-test_loader = DataLoader(test_ds, batch_size=n_batches, shuffle=False, num_workers=1)
-for batch in test_loader:
-    print(len(batch['categories'][0]))
+if __name__ == "__main__":
+    test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['categories','city','cool'], files_dir="./yelp_data/test_pickles")
+    # NOTE: preshuffled data. Set shuffle=False or hacked forward read will fail.
+    n_batches = 64
+    batch_size = len(test_ds) / n_batches
+    test_loader = DataLoader(test_ds, batch_size=n_batches, shuffle=False, num_workers=1)
+    for batch in test_loader:
+        print(len(batch['categories'][0]))
 
 
 
