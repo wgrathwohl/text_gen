@@ -48,6 +48,8 @@ class RVAE(nn.Module):
         for i, l in enumerate(lens):
             mask[i, :l] = 1.0
         mask = Variable(torch.FloatTensor(mask))
+        if torch.cuda.is_available():
+            mask = mask.cuda()
         masked_nll = nll.mul(mask).sum(dim=1).mean().squeeze().mul(-1.)
         return out, masked_nll, kld
 
