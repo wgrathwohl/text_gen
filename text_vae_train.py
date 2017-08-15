@@ -89,6 +89,7 @@ def sample_reconst(data, output, vocab):
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
     train_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/part_0")
+    print(train_dataset.ind2word)
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
