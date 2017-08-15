@@ -43,14 +43,9 @@ class TextDataset(Dataset):
 
 
 class YelpDataset(Dataset):
-    """
-    each batch is contained in one pickled file
-    transform is set to pickle.load by default
-    a loaded pickle file is a list of dict where each dict is one example
-    """
 
     def __init__(self, vocab_file, fields,
-                 file_dir='/ais/gobi5/roeder/datasets/yelp_reviews/pickles',
+                 file_dir='/ais/gobi5/roeder/datasets/yelp_reviews/all_json.txt',
                  transform=None):
         self.transform = transform
         self.fields = fields
@@ -103,9 +98,8 @@ def pad_batch(examples):
     # ::todo:: return labels for classification
     return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
 
-
-#test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['text', 'categories', 'city', 'cool'],
-#                      file_dir="./yelp_data/txt/mock_data.txt")
+# sanity test
+#test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['text', 'categories', 'city', 'cool'])
 #test_loader = DataLoader(test_ds, batch_size=64, shuffle=True, num_workers=4, collate_fn=pad_batch)
 #for batch in test_loader:
 #    print(batch['categories'][0])
