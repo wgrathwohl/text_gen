@@ -142,9 +142,9 @@ def validate(args, epoch, model, step):
             data = data.cuda()
             lens = lens.cuda()
             mask = mask.cuda()
-        data = Variable(data, volitile=True)
-        lens = Variable(lens, volitile=True)
-        mask = Variable(mask, volitile=True)
+        data = Variable(data, volatile=True)
+        lens = Variable(lens, volatile=True)
+        mask = Variable(mask, volatile=True)
 
         out, nll, kld = model(data, lens, mask)
         loss = nll + kld
