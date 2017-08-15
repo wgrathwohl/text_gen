@@ -98,13 +98,13 @@ def train(args, epoch, optimizer, model):
         step = len(train_loader) * epoch + idx
         start_time = time.time()
         data, lens, mask = batch
-        data = Variable(data)
-        lens = Variable(lens)
-        mask = Variable(mask)
         if args.cuda:
             data = data.cuda()
             lens = lens.cuda()
             mask = mask.cuda()
+        data = Variable(data)
+        lens = Variable(lens)
+        mask = Variable(mask)
 
         optimizer.zero_grad()
         out, nll, kld = model(data, lens, mask)
@@ -138,13 +138,13 @@ def validate(args, epoch, model, step):
     for idx, batch in enumerate(valid_loader):
         start_time = time.time()
         data, lens, mask = batch
-        data = Variable(data)
-        lens = Variable(lens)
-        mask = Variable(mask)
         if args.cuda:
             data = data.cuda()
             lens = lens.cuda()
             mask = mask.cuda()
+        data = Variable(data, volitile=True)
+        lens = Variable(lens, volitile=True)
+        mask = Variable(mask, volitile=True)
 
         out, nll, kld = model(data, lens, mask)
         loss = nll + kld
@@ -195,5 +195,5 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):
-        #step = train(args, epoch, optimizer, model)
-        validate(args, epoch, model, 0)#step)
+        step = train(args, epoch, optimizer, model)
+        validate(args, epoch, model, step)
