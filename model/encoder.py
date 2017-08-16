@@ -23,6 +23,7 @@ class Encoder(nn.Module):
         :return:]
         """
         embeddings = self.embedding(input)
+        print("forward input shape", input.size())
         print("forward lens", lens)
         packed_input = pack_padded_sequence(embeddings, lens, batch_first=True)
         _, (h_n, _) = self.rnn(packed_input)
