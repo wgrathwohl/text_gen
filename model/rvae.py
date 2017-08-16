@@ -29,7 +29,7 @@ class RVAE(nn.Module):
         :param lens: list of ints of sequence lengths
         :return:
         """
-        lens = lens.cpu().numpy()
+        lens = list(lens.cpu().numpy())
         mu, logvar, embeddings = self.encoder(data, lens)
         z = self.encoder.sample_z(mu, logvar)
         kld = (-0.5 * torch.sum(logvar - torch.pow(mu, 2) - torch.exp(logvar) + 1, 1)).mean().squeeze()

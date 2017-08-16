@@ -110,7 +110,9 @@ def train(args, epoch, optimizer, model):
         data, lens = batch
         if args.cuda:
             data = data.cuda()
+            lens = lens.cuda()
         data = Variable(data)
+        lens = Variable(lens)
 
         optimizer.zero_grad()
         out, nll, kld = model(data, lens)
