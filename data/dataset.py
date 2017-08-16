@@ -97,7 +97,7 @@ def pad_batch(examples):
         l = len(ex)
         batch[j, :l] = ex
 
-    return torch.from_numpy(batch), lens
+    return torch.from_numpy(batch), torch.from_numpy(lens)
 
 
 # sanity test
