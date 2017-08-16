@@ -45,18 +45,19 @@ class TextDataset(Dataset):
 class YelpDataset(Dataset):
 
     def __init__(self, vocab_file, fields,
-                 file_dir='/ais/gobi5/roeder/datasets/yelp_reviews/all_json.txt',
+                 data_file='/ais/gobi5/roeder/datasets/yelp_reviews/all_json.txt',
                  transform=None):
         self.transform = transform
         self.fields = fields
-        self._curr_file = self._load(file_dir)
+        self._curr_file = self._load(data_file)
         self._json = []
         print("Loading dataset into memory, this may take a while...")
         for x in self._curr_file:
             if x:
                 self._json.append(json.loads(x))
         print("Done loading dataset.")
-        self.vocab = self._load_vocab(vocab_file)
+        self.vocab = {}
+        self._load_vocab(vocab_file)
 
     def _load_vocab(self, vocab_file):
         vocab = {}
@@ -83,6 +84,7 @@ class YelpDataset(Dataset):
 
 def pad_batch(examples):
     # sort in decreasing order
+    examples = [ex['text'] for ex in examples]
     examples.sort(key=lambda s: -1 * len(s))
     lens = np.array([len(s) for s in examples], dtype=np.int64)
     max_len = max(lens)

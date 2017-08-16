@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import os
 import numpy as np
 from tensorboard_logger import configure, log_value
-from data.dataset import TextDataset, pad_batch
+from data.dataset import YelpDataset, pad_batch
 from torch.utils.data import DataLoader
 import time
 
@@ -45,12 +45,14 @@ parser.add_argument('--test-interval', type=int, default=1, metavar='TEI',
 parser.add_argument('--batch-size', type=int, default=32, metavar='BS',
                     help='size of word embeddings (default: 512)')
 parser.add_argument('--vocab-path', type=str,
-                    default="/ais/gobi5/roeder/datasets/yelp_reviews/eng_only_text/vocab.txt",
+                    default="/ais/gobi5/roeder/datasets/yelp_reviews/vocab.txt",
                     metavar="VP",
                     help='path to vocabulary file')
-parser.add_argument('--train-path', type=str, default="data/yelp_data/train.txt", metavar="TP",
+parser.add_argument('--train-path', type=str,
+                    default="/ais/gobi5/roeder/datasets/yelp_reviews/train.txt", metavar="TP",
                     help='training reviews')
-parser.add_argument('--valid-path', type=str, default="data/yelp_data/valid.txt", metavar="VAP",
+parser.add_argument('--valid-path', type=str,
+                    default="/ais/gobi5/roeder/datasets/yelp_reviews/valid.txt", metavar="VAP",
                     help='validation reviews')
 
 
@@ -97,7 +99,7 @@ def sample_reconst(data, output, vocab):
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
     model.train()
-    train_dataset = TextDataset(args.vocab_path, "data/yelp_data/train.txt")
+    train_dataset = YelpDataset(args.vocab_path, ['text'], args.train_path)
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -133,7 +135,7 @@ def train(args, epoch, optimizer, model):
 def validate(args, epoch, model, step):
     print("Validating...")
     model.eval()
-    valid_dataset = TextDataset(args.vocab_path, "data/yelp_data/valid.txt")
+    valid_dataset = YelpDataset(args.vocab_path, ['text'], args.valid_path)
     valid_loader = DataLoader(
         valid_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
