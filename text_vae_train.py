@@ -110,7 +110,6 @@ def train(args, epoch, optimizer, model):
         data, lens = batch
         if args.cuda:
             data = data.cuda()
-            lens = lens.cuda()
         data = Variable(data)
         lens = Variable(lens)
 
@@ -161,6 +160,7 @@ def validate(args, epoch, model, step):
         if args.cuda:
             data = data.cuda()
         data = Variable(data, volatile=True)
+        lens = Variable(lens, volatile=True)
 
         out, nll, kld = model(data, lens)
         loss = nll + kld
