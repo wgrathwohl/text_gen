@@ -108,8 +108,8 @@ def train(args, epoch, optimizer, model):
         step = len(train_loader) * epoch + idx
         start_time = time.time()
         data, lens = batch
-        if args.cuda:
-            data = data.cuda()
+        # if args.cuda:
+        #     data = data.cuda()
         data = Variable(data)
 
         optimizer.zero_grad()
@@ -144,8 +144,8 @@ def validate(args, epoch, model, step):
     for idx, batch in enumerate(valid_loader):
         start_time = time.time()
         data, lens = batch
-        if args.cuda:
-            data = data.cuda()
+        # if args.cuda:
+        #     data = data.cuda()
         data = Variable(data, volatile=True)
 
         out, nll, kld = model(data, lens)
