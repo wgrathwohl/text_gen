@@ -158,7 +158,7 @@ def validate(args, epoch, model, step):
             print("Valid Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
 
         if idx % args.sample_interval == 0:
-            valid_dataset.ind2word[11] = 'o'
+            #valid_dataset.ind2word[11] = 'o'
             data_np = data.data.cpu().numpy()
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
@@ -188,9 +188,11 @@ if __name__ == "__main__":
     os.makedirs(args.train_dir)
     configure(args.train_dir, flush_secs=5)
 
-    model = RVAE(
-        args.vocab_size, args.embedding_size, args.hidden_size,
-        args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
+    model = nn.DataParallel(
+        RVAE(
+            args.vocab_size, args.embedding_size, args.hidden_size,
+            args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
+        )
     )
     if args.cuda:
         model.cuda()
