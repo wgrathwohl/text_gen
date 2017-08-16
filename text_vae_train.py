@@ -118,6 +118,8 @@ def train(args, epoch, optimizer, model):
         kl_weight = min((float(step) / args.kl_iter) * .99 + .01, 1.0)
         weighted_kld = kld.mul(kl_weight)
         loss = (nll + weighted_kld).mean().squeeze()
+        nll = nll.mean().squeeze()
+        kld = kld.mean().squeeze()
         loss.backward()
         optimizer.step()
         batch_time = time.time() - start_time
@@ -161,7 +163,9 @@ def validate(args, epoch, model, step):
         lens = Variable(lens, volatile=True)
 
         out, nll, kld = model(data, lens)
-        loss = nll + kld
+        loss = (nll + kld).mean().squeeze()
+        nll = nll.mean().squeeze()
+        kld = kld.mean().squeeze()
         valid_losses.append(loss.data[0])
         batch_time = time.time() - start_time
 
