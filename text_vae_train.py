@@ -44,6 +44,14 @@ parser.add_argument('--test-interval', type=int, default=1, metavar='TEI',
                     help='how many epochs to wait before running testing')
 parser.add_argument('--batch-size', type=int, default=32, metavar='BS',
                     help='size of word embeddings (default: 512)')
+parser.add_argument('--vocab-path', type=str,
+                    default="/ais/gobi5/roeder/datasets/yelp_reviews/eng_only_text/vocab.txt",
+                    metavar="VP",
+                    help='path to vocabulary file')
+parser.add_argument('--train-path', type=str, default="data/yelp_data/train.txt", metavar="TP",
+                    help='training reviews')
+parser.add_argument('--valid-path', type=str, default="data/yelp_data/valid.txt", metavar="VAP",
+                    help='validation reviews')
 
 
 def lr_scheduler(opt, epoch, init_lr=0.001, start_decay_epoch=30, decay_multiplier=.5):
@@ -89,7 +97,7 @@ def sample_reconst(data, output, vocab):
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
     model.train()
-    train_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/train.txt")
+    train_dataset = TextDataset(args.vocab_path, "data/yelp_data/train.txt")
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -125,7 +133,7 @@ def train(args, epoch, optimizer, model):
 def validate(args, epoch, model, step):
     print("Validating...")
     model.eval()
-    valid_dataset = TextDataset("data/yelp_data/vocab.txt", "data/yelp_data/valid.txt")
+    valid_dataset = TextDataset(args.vocab_path, "data/yelp_data/valid.txt")
     valid_loader = DataLoader(
         valid_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
