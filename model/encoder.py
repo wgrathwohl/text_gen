@@ -25,7 +25,7 @@ class Encoder(nn.Module):
         embeddings = self.embedding(input)
         print("forward input shape", input.size())
         print("forward lens", lens)
-        packed_input = pack_padded_sequence(embeddings, lens, batch_first=True)
+        packed_input = pack_padded_sequence(embeddings, lens.cpu().numpy(), batch_first=True)
         _, (h_n, _) = self.rnn(packed_input)
         rnn_final_hiddens = h_n[0, :, :]
         mu = self.mu(rnn_final_hiddens)
