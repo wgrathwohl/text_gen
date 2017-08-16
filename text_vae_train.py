@@ -108,8 +108,8 @@ def train(args, epoch, optimizer, model):
         step = len(train_loader) * epoch + idx
         start_time = time.time()
         data, lens = batch
-        # if args.cuda:
-        #     data = data.cuda()
+        if args.cuda:
+            data = data.cuda()
         data = Variable(data)
 
         optimizer.zero_grad()
@@ -128,6 +128,17 @@ def train(args, epoch, optimizer, model):
             log_value("kld", k, step)
             print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
 
+        if idx % args.sample_interval == 0:
+            #valid_dataset.ind2word[11] = 'o'
+            data_np = data.data.cpu().numpy()
+            _, out_preds = torch.max(out, 1)
+            out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
+            recons = sample_reconst(data_np, out_preds_np, train_dataset.ind2word)
+            with open(os.path.join(args.train_dir, "train_recons_{}.txt".format(idx)), "w") as f:
+                for s, sp in recons:
+                    f.write(s + '\n\n')
+                    f.write(sp + '\n\n\n')
+
     print("Epoch {} completed!\n".format(epoch))
     return step
 
@@ -144,8 +155,8 @@ def validate(args, epoch, model, step):
     for idx, batch in enumerate(valid_loader):
         start_time = time.time()
         data, lens = batch
-        # if args.cuda:
-        #     data = data.cuda()
+        if args.cuda:
+            data = data.cuda()
         data = Variable(data, volatile=True)
 
         out, nll, kld = model(data, lens)
@@ -163,7 +174,7 @@ def validate(args, epoch, model, step):
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
             recons = sample_reconst(data_np, out_preds_np, valid_dataset.ind2word)
-            with open(os.path.join(args.train_dir, "reconstructions_{}.txt".format(idx)), "w") as f:
+            with open(os.path.join(args.train_dir, "valid_recons_{}.txt".format(idx)), "w") as f:
                 for s, sp in recons:
                     f.write(s + '\n\n')
                     f.write(sp + '\n\n\n')
@@ -200,7 +211,6 @@ if __name__ == "__main__":
     )
     if args.cuda:
         model.cuda()
-        model.encoder.embedding.cpu()
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):

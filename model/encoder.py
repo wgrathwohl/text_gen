@@ -23,8 +23,6 @@ class Encoder(nn.Module):
         :return:]
         """
         embeddings = self.embedding(input)
-        if torch.cuda.is_available():
-            embeddings = embeddings.cuda()
         packed_input = pack_padded_sequence(embeddings, lens, batch_first=True)
         _, (h_n, _) = self.rnn(packed_input)
         rnn_final_hiddens = h_n[0, :, :]
