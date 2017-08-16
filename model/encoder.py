@@ -8,7 +8,7 @@ class Encoder(nn.Module):
     def __init__(self, vocab_size=20000, embedding_size=512, hidden_size=1024, lstm_layers=1, latent_dim=32, dropout=.3):
         super(Encoder, self).__init__()
 
-        self.embedding = nn.Embedding(vocab_size, embedding_size)
+        self.embedding = nn.Embedding(vocab_size, embedding_size, max_norm=1.0, scale_grad_by_freq=True)
         self.rnn = nn.LSTM(input_size=embedding_size,
                            hidden_size=hidden_size,
                            num_layers=lstm_layers,
@@ -16,7 +16,7 @@ class Encoder(nn.Module):
         self.mu = nn.Linear(hidden_size, latent_dim)
         self.logvar = nn.Linear(hidden_size, latent_dim)
 
-    def forward(self, input, lens):#, final_inds):
+    def forward(self, input, lens):
         """
         :param input: [batch_size, max_seq_len] tensor
         :param lens: [batch_size, max_seq_len] tensor witih all 0's and a 1 in the place of the last word
