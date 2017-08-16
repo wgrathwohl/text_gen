@@ -17,10 +17,10 @@ class RVAE(nn.Module):
             hidden_size=hidden_size, lstm_layers=lstm_layers,
             latent_dim=latent_dim, dropout=dropout
         )
-        self.decoder = nn.DataParallel(CNNDecoder(
+        self.decoder = CNNDecoder(
             embedding_size, latent_dim,
             layers_list=layers_list, vocab_size=vocab_size
-        ))
+        )
 
     def forward(self, data, lens):
         """
