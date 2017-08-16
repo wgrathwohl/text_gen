@@ -30,6 +30,8 @@ parser.add_argument('--layer-list', type=str, default="1,2,4", metavar='LL',
                     help='list of ints telling the size of the decoder (default: "1,2,4")')
 parser.add_argument('--dropout', type=float, default=.3, metavar='DRO',
                     help='dropout probability for encoder LSTM (default: .3')
+parser.add_argument('--learning-rate', type=float, default=.001, metavar='LR',
+                    help='base learning rate (default: .001')
 parser.add_argument('--train-dir', type=str, default="/tmp/rvae_train", metavar='TD',
                     help='where to save logs and checkpointed models')
 parser.add_argument('--epochs', type=int, default=40, metavar='N',
@@ -215,7 +217,7 @@ if __name__ == "__main__":
     # )
     if args.cuda:
         model.cuda()
-    optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, betas=(.5, .999))
 
     for epoch in range(args.epochs):
         step = train(args, epoch, optimizer, model)
