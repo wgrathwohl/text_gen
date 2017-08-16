@@ -119,6 +119,7 @@ def train(args, epoch, optimizer, model):
         kl_weight = min((float(step) / args.kl_iter) * .99 + .01, 1.0)
         weighted_kld = kld.mul(kl_weight)
         loss = nll + weighted_kld
+        print("loss size", loss.size())
         loss.backward()
         optimizer.step()
         batch_time = time.time() - start_time
