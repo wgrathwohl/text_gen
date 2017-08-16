@@ -188,14 +188,19 @@ if __name__ == "__main__":
     os.makedirs(args.train_dir)
     configure(args.train_dir, flush_secs=5)
 
-    model = nn.DataParallel(
-        RVAE(
-            args.vocab_size, args.embedding_size, args.hidden_size,
-            args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
-        )
+    # model = nn.DataParallel(
+    #     RVAE(
+    #         args.vocab_size, args.embedding_size, args.hidden_size,
+    #         args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
+    #     )
+    # )
+    model = RVAE(
+        args.vocab_size, args.embedding_size, args.hidden_size,
+        args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
     )
     if args.cuda:
         model.cuda()
+        model.encoder.embedding.cpu()
     optimizer = optim.Adam(model.parameters(), betas=(.5, .999))
 
     for epoch in range(args.epochs):

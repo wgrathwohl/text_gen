@@ -19,7 +19,7 @@ class Encoder(nn.Module):
     def forward(self, input, lens):
         """
         :param input: [batch_size, max_seq_len] tensor
-        :param lens: [batch_size, max_seq_len] tensor witih all 0's and a 1 in the place of the last word
+        :param lens: [batch_size, max_seq_len] tensor with all 0's and a 1 in the place of the last word
         :return:]
         """
         embeddings = self.embedding(input)
