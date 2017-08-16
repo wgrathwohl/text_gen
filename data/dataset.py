@@ -58,6 +58,7 @@ class YelpDataset(Dataset):
         print("Done loading dataset.")
         self.vocab = {}
         self._load_vocab(vocab_file)
+        self.ind2word = {v: k for k, v in self.vocab.items()}
 
     def _load_vocab(self, vocab_file):
         vocab = {}
