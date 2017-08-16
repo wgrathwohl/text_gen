@@ -3,6 +3,7 @@ from json.encoder import JSONEncoder
 JSONENCODER = JSONEncoder()
 import nltk
 
+
 def lazy_read_json(file_object):
     """lazily read json file line by line"""
     while True:
@@ -10,6 +11,18 @@ def lazy_read_json(file_object):
         if not data:
             break
         yield json.loads(data)
+
+
+
+def lazy_read_json(file_object, vocab):
+    """lazily read json file line by line"""
+    while True:
+        data = file_object.readline()
+
+        if not data:
+            break
+        yield json.loads(data)
+
 
 
 def fill_business_dict(file, b_dict):
@@ -53,6 +66,10 @@ def add_attribute(in_file, out_file, attr_names, b_dict):
 
 if __name__=='__main__':
     attr_list = ['categories', 'city', 'attributes']
+    VOCAB_FILE= None
+    with open(VOCAB_FILE, 'r') as v:
+        words = v.readlines()
+        vocab = dict(enumerate(words))
 
     b_dict = dict()
     b_file = open('yelp_academic_dataset_business.json')
