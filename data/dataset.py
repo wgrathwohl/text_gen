@@ -89,7 +89,7 @@ def pad_batch(examples):
     examples.sort(key=lambda s: -1 * len(s))
     lens = np.array([len(s) for s in examples], dtype=np.int64)
     max_len = max(lens)
-    print(max_len)
+    print("pad batch lens", lens)
     batch_size = len(examples)
     # make batch
     batch = np.zeros((batch_size, max_len), dtype=np.int64)
