@@ -118,7 +118,6 @@ def train(args, epoch, optimizer, model):
         kl_weight = min((float(step) / args.kl_iter) * .99 + .01, 1.0)
         weighted_kld = kld.mul(kl_weight)
         loss = (nll + weighted_kld).mean().squeeze()
-        print("loss size", loss.size())
         loss.backward()
         optimizer.step()
         batch_time = time.time() - start_time
@@ -131,7 +130,6 @@ def train(args, epoch, optimizer, model):
             print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
 
         if idx % args.sample_interval == 0:
-            #valid_dataset.ind2word[11] = 'o'
             data_np = data.data.cpu().numpy()
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
@@ -172,7 +170,6 @@ def validate(args, epoch, model, step):
             print("Valid Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
 
         if idx % args.sample_interval == 0:
-            #valid_dataset.ind2word[11] = 'o'
             data_np = data.data.cpu().numpy()
             _, out_preds = torch.max(out, 1)
             out_preds_np = out_preds[:, 0, :].data.cpu().numpy()
