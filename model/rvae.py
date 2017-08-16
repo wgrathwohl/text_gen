@@ -39,6 +39,8 @@ class RVAE(nn.Module):
         # squash to [batch_size * seq_length, vocab_size]
         out_exp = out_perm.view(out.size(0) * out.size(2), out.size(1))
         log_probs_exp = F.log_softmax(out_exp)
+        if torch.cuda.is_available():
+            data = data.cuda()
         data_exp = data.view((-1, 1))
         nll_exp = torch.gather(log_probs_exp, 1, data_exp)
         nll = nll_exp.view(out.size(0), out.size(2))
