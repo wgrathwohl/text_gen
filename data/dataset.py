@@ -46,16 +46,18 @@ class YelpDataset(Dataset):
 
     def __init__(self, vocab_file, fields,
                  data_file='/ais/gobi5/roeder/datasets/yelp_reviews/all_json.txt',
-                 transform=None):
+                 transform=None, size=None):
         self.transform = transform
         self.fields = fields
         self._curr_file = self._load(data_file)
         self._json = []
         print("Loading dataset into memory, this may take a while...")
-        for x in self._curr_file:
+        for i, x in enumerate(self._curr_file):
             if x:
                 self._json.append(json.loads(x))
-        print("Done loading dataset.")
+            if size is not None and i > size:
+                break
+        print("Done loading {} examples from dataset.".format(i))
         self.vocab = {}
         self._load_vocab(vocab_file)
         self.ind2word = {v: k for k, v in self.vocab.items()}

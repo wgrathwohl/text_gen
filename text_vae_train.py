@@ -46,10 +46,18 @@ parser.add_argument('--test-interval', type=int, default=1, metavar='TEI',
                     help='how many epochs to wait before running testing')
 parser.add_argument('--batch-size', type=int, default=32, metavar='BS',
                     help='size of word embeddings (default: 512)')
+parser.add_argument('--train-size', type=int, default=100000, metavar='BS',
+                    help='number of examples to train on (default: 100k)')
+parser.add_argument('--checkpoint-interval', type=int, default=10000, metavar='CI',
+                    help='number of iters to save a checkpoint (default: 10000)')
 parser.add_argument('--vocab-path', type=str,
                     default="/ais/gobi5/roeder/datasets/yelp_reviews/vocab.txt",
                     metavar="VP",
                     help='path to vocabulary file')
+parser.add_argument('--checkpoint-path', type=str,
+                    default=None,
+                    metavar="CP",
+                    help='path to checkpoint file (default: None)')
 parser.add_argument('--train-path', type=str,
                     default="/ais/gobi5/roeder/datasets/yelp_reviews/train.txt", metavar="TP",
                     help='training reviews')
@@ -101,7 +109,7 @@ def sample_reconst(data, output, vocab):
 def train(args, epoch, optimizer, model):
     optimizer = lr_scheduler(optimizer, epoch)
     model.train()
-    train_dataset = YelpDataset(args.vocab_path, ['text'], args.train_path)
+    train_dataset = YelpDataset(args.vocab_path, ['text'], args.train_path, size=args.train_size)
     train_loader = DataLoader(
         train_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -143,6 +151,10 @@ def train(args, epoch, optimizer, model):
                     f.write(s + '\n\n')
                     f.write(sp + '\n\n\n')
 
+        if idx % args.checkpoint_interval == 0:
+            print("Checkpointing Model")
+            torch.save(model, os.path.join(args.train_dir, "training_iter_{}_epoch_{}.ckpt".format(step, epoch)))
+
     print("Epoch {} completed!\n".format(epoch))
     return step
 
@@ -150,7 +162,7 @@ def train(args, epoch, optimizer, model):
 def validate(args, epoch, model, step):
     print("Validating...")
     model.eval()
-    valid_dataset = YelpDataset(args.vocab_path, ['text'], args.valid_path)
+    valid_dataset = YelpDataset(args.vocab_path, ['text'], args.valid_path, size=args.train_size/10)
     valid_loader = DataLoader(
         valid_dataset, batch_size=args.batch_size,
         shuffle=True, num_workers=4, collate_fn=pad_batch
@@ -184,10 +196,13 @@ def validate(args, epoch, model, step):
                 for s, sp in recons:
                     f.write(s + '\n\n')
                     f.write(sp + '\n\n\n')
+
     print("Validation Epoch {} completed!".format(epoch))
     valid_loss = np.mean(valid_losses)
     print("Validation ELBO: {}".format(valid_loss))
     log_value("valid_loss", valid_loss, step)
+    print("Checkpointing Model")
+    torch.save(model, os.path.join(args.train_dir, "epoch_{}_loss_{}.ckpt".format(epoch, valid_loss)))
 
 
 
@@ -205,16 +220,16 @@ if __name__ == "__main__":
     os.makedirs(args.train_dir)
     configure(args.train_dir, flush_secs=5)
 
-    model = nn.DataParallel(
-        RVAE(
-            args.vocab_size, args.embedding_size, args.hidden_size,
-            args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
+    if args.checkpoint_path is not None:
+        model = torch.load(args.checkpoint_path)
+    else:
+        model = nn.DataParallel(
+            RVAE(
+                args.vocab_size, args.embedding_size, args.hidden_size,
+                args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
+            )
         )
-    )
-    # model = RVAE(
-    #     args.vocab_size, args.embedding_size, args.hidden_size,
-    #     args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
-    # )
+
     if args.cuda:
         model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, betas=(.5, .999))
