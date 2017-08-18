@@ -60,12 +60,15 @@ if __name__ == "__main__":
     test_ds = TextDataset("../data/yelp_data/vocab.txt", "../data/yelp_data/part_0")
     test_loader = DataLoader(test_ds, batch_size=4, shuffle=True, num_workers=4, collate_fn=pad_batch)
     vae = RVAE(20000, 512, 1024, 1, 32)
-    d = vae.state_dict()
-    for k, v in d.items():
-        print(k, v.size())
-    for batch, lens in test_loader:
-        #print(lens[:2])
-        #print(mask[:2])
-        pred, nll, kld = vae(Variable(batch), lens)
-        break
+    # d = vae.state_dict()
+    # for k, v in d.items():
+    #     print(k, v.mean(), v.var())
+    for n, p in vae.named_parameters():
+        print(n, p.mean().data[0], p.var().data[0])
+        print(p.grad.mean())
+    # for batch, lens in test_loader:
+    #     #print(lens[:2])
+    #     #print(mask[:2])
+    #     pred, nll, kld = vae(Variable(batch), lens)
+    #     break
 

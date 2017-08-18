@@ -140,6 +140,12 @@ def train(args, epoch, optimizer, model):
             log_value("nll", n, step)
             log_value("kld", k, step)
             print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
+            for name, parameter, v in model.named_parameters():
+                log_value("{}/mean".format(name), parameter.mean().data[0], step)
+                log_value("{}/var".format(name), parameter.var().data[0], step)
+                log_value("{}/grad_mean".format(name), parameter.grad.mean().data[0])
+                log_value("{}/grad_var".format(name), parameter.grad.var().data[0])
+
 
         if idx % args.sample_interval == 0:
             data_np = data.data.cpu().numpy()
@@ -232,7 +238,7 @@ if __name__ == "__main__":
 
     if args.cuda:
         model.cuda()
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, betas=(.5, .999))
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, betas=(.5, .999), weight_decay=.0005)
 
     for epoch in range(args.epochs):
         step = train(args, epoch, optimizer, model)
