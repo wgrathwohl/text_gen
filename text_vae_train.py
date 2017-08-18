@@ -143,8 +143,8 @@ def train(args, epoch, optimizer, model):
             for name, parameter in model.named_parameters():
                 log_value("{}/mean".format(name), parameter.mean().data[0], step)
                 log_value("{}/var".format(name), parameter.var().data[0], step)
-                log_value("{}/grad_mean".format(name), parameter.grad.mean().data[0])
-                log_value("{}/grad_var".format(name), parameter.grad.var().data[0])
+                log_value("{}/grad_mean".format(name), parameter.grad.mean().data[0], step)
+                log_value("{}/grad_var".format(name), parameter.grad.var().data[0], step)
 
 
         if idx % args.sample_interval == 0:
