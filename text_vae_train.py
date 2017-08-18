@@ -140,7 +140,7 @@ def train(args, epoch, optimizer, model):
             log_value("nll", n, step)
             log_value("kld", k, step)
             print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
-            for name, parameter, v in model.named_parameters():
+            for name, parameter in model.named_parameters():
                 log_value("{}/mean".format(name), parameter.mean().data[0], step)
                 log_value("{}/var".format(name), parameter.var().data[0], step)
                 log_value("{}/grad_mean".format(name), parameter.grad.mean().data[0])
