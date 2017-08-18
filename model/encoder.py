@@ -8,7 +8,7 @@ class Encoder(nn.Module):
     def __init__(self, vocab_size=20000, embedding_size=512, hidden_size=1024, lstm_layers=1, latent_dim=32, dropout=.3):
         super(Encoder, self).__init__()
 
-        self.embedding = nn.Embedding(vocab_size, embedding_size, max_norm=1.0)
+        self.embedding = nn.Embedding(vocab_size, embedding_size)
         self.rnn = nn.LSTM(input_size=embedding_size,
                            hidden_size=hidden_size,
                            num_layers=lstm_layers,
