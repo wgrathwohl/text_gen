@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     if args.cuda:
         model.cuda()
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, betas=(.5, .999), weight_decay=.0005)
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=.0005)
 
     for epoch in range(args.epochs):
         step = train(args, epoch, optimizer, model)
