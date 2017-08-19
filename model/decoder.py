@@ -53,7 +53,7 @@ class ARBlock(nn.Module):
 
 
 class CNNDecoder(nn.Module):
-    def __init__(self, embed_dim, z_dim, layers_list=[1,2,4], internal_size=512, external_size=1024, k_size=3, vocab_size=20000):
+    def __init__(self, embed_dim, z_dim, layers_list=[1,2,4], internal_size=512, external_size=1024, k_size=3, vocab_size=20000, do=.1):
         """
 
         :param layers_list: list in form of [1, 2, 4] that specifies 3 residual blocks
@@ -68,11 +68,12 @@ class CNNDecoder(nn.Module):
                 ARBlock(
                     embed_dim + z_dim if i == 0 else external_size,
                     k_size, dilation,
-                    internal_size=internal_size, external_size=external_size
+                    internal_size=internal_size, external_size=external_size, do=do
                 )
             )
         self.blocks = nn.Sequential(*self._blocks)
         self.pred_word = nn.Conv1d(external_size, vocab_size, 1)
+        self.dropout = nn.Dropout(p=do)
 
     def forward(self, x, z):
         """
@@ -97,7 +98,7 @@ class CNNDecoder(nn.Module):
         # crop off the last bit so we have probabilities
         # that match up with our input
         x_cur = x_cur[:, :, :x.size(2)]
-        pred_words = self.pred_word(x_cur)
+        pred_words = self.pred_word(self.dropout(x_cur))
         return pred_words
 
 
