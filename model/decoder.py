@@ -9,32 +9,33 @@ class CausalConv1D(nn.Module):
     Assumes that the input padded as [START, word1, word2, word3, ..., wordN, EOS] len = N + 2
     Outputs will be preds for [word1, word2, ..., wordN, EOS] len = N + 1
     """
-    def __init__(self, D_in, D_out, k_size, dilation):
+    def __init__(self, D_in, D_out, k_size, dilation, do=.1):
         super(CausalConv1D, self).__init__()
         r_field = k_size + (k_size - 1) * (dilation - 1)
         padding = r_field - 1
         self.conv = torch.nn.Conv1d(D_in, D_out, k_size, dilation=dilation, padding=padding)
+        self.dropout = nn.Dropout(p=do)
 
     def forward(self, x):
         # the output of the convolution will have trailing values that we don't want
-        x_conv_padded = self.conv(x)
+        x_conv_padded = self.conv(self.dropout(x))
         x_conv = x_conv_padded[:, :, :x.size(2)]
         return x_conv
 
 
 class ARBlock(nn.Module):
     def __init__(self, D_in, k_size, dilation, nonlin=torch.nn.ReLU,
-                 internal_size=512, external_size=1024):
+                 internal_size=512, external_size=1024, do=.1):
         super(ARBlock, self).__init__()
-        self.c1 = CausalConv1D(D_in, internal_size, 1, 1)
-        self.c2 = CausalConv1D(512, internal_size, k_size, dilation)
-        self.c3 = CausalConv1D(512, external_size, 1, 1)
+        self.c1 = CausalConv1D(D_in, internal_size, 1, 1, do=do)
+        self.c2 = CausalConv1D(512, internal_size, k_size, dilation, do=do)
+        self.c3 = CausalConv1D(512, external_size, 1, 1, do=do)
 
         # if D_in and external_size do not match, we use a linear [1x1] conv (no nonlinearity)
         # to project the input to the right dimensionality
         if D_in != external_size:
             self.need_proj = True
-            self.c_proj = CausalConv1D(D_in, external_size, 1, 1)
+            self.c_proj = CausalConv1D(D_in, external_size, 1, 1, do=do)
         else:
             self.need_proj = False
 
