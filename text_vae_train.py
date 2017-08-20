@@ -34,7 +34,7 @@ parser.add_argument('--learning-rate', type=float, default=.001, metavar='LR',
                     help='base learning rate (default: .001')
 parser.add_argument('--train-dir', type=str, default="/tmp/rvae_train", metavar='TD',
                     help='where to save logs and checkpointed models')
-parser.add_argument('--epochs', type=int, default=80, metavar='N',
+parser.add_argument('--epochs', type=int, default=40, metavar='N',
                     help='number of epochs to train (default: 40)')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
@@ -66,7 +66,7 @@ parser.add_argument('--valid-path', type=str,
                     help='validation reviews')
 
 
-def lr_scheduler(opt, epoch, init_lr=0.001, start_decay_epoch=60, decay_multiplier=.5):
+def lr_scheduler(opt, epoch, init_lr=0.001, start_decay_epoch=30, decay_multiplier=.5):
     """Decay learning rate by a factor of 0.5 every lr_decay_epoch epochs."""
     if epoch < start_decay_epoch:
         lr = init_lr
