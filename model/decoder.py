@@ -107,6 +107,7 @@ if __name__ == "__main__":
     x = Variable(torch.zeros((10, 7, 128)).normal_())
 
     dec = CNNDecoder(128, 64)
+    dec.eval()
     out1 = dec(x, z)
     z2 = Variable(torch.zeros((10, 64)).normal_())
     out2 = dec(x, z2)

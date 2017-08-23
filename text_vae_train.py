@@ -125,7 +125,7 @@ def train(args, epoch, optimizer, model):
 
         optimizer.zero_grad()
         out, nll, kld = model(data, lens)
-        kl_weight = min((float(step) / args.kl_iter) * .99 + .01, 1.0)
+        kl_weight = min((float(step) / args.kl_iter), 1.0)# * .99 + .01, 1.0)
         weighted_kld = kld.mul(kl_weight)
         loss = (nll + weighted_kld).mean().squeeze()
         nll = nll.mean().squeeze()
