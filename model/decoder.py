@@ -109,9 +109,8 @@ class CNNDecoder(nn.Module):
         # need to copy z (num_words + 1) times in the 2nd dimension then concat to x_padded
         # send z samples through MLP before input to CNN decoder
         z_mlp = self.mlp(z)
-
         # need to copy z (num_words + 1) times in the 2nd dimension then concat to x_padded
-        z_exp = z.view(z_mlp.size(0), z_mlp.size(1), 1).expand(z_mlp.size(0), z_mlp.size(1), x.size(2) + 1)
+        z_exp = z_mlp.view(z_mlp.size(0), z_mlp.size(1), 1).expand(z_mlp.size(0), z_mlp.size(1), x.size(2) + 1)
         # concatenate z with x
         dec_input = torch.cat([x_padded, z_exp], 1)
         x_cur = self.blocks(dec_input)
