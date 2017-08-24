@@ -229,12 +229,12 @@ if __name__ == "__main__":
     if args.checkpoint_path is not None:
         model = torch.load(args.checkpoint_path)
     else:
-        model = nn.DataParallel(
-            RVAE(
+        #model = nn.DataParallel( # ::temporary disable for testing
+        model = RVAE(
                 args.vocab_size, args.embedding_size, args.hidden_size,
                 args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
             )
-        )
+        #)
 
     if args.cuda:
         model.cuda()
