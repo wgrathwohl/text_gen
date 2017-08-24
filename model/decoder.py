@@ -22,6 +22,22 @@ class CausalConv1D(nn.Module):
         return x_conv
 
 
+class MLP(nn.Module):
+    def __init__(self, D_in, D_out, nonlin=torch.nn.ReLU,
+                 internal_size=512):
+        """ MLP to mix input dimensions from RNN embedding"""
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(D_in, internal_size)
+        self.fc2 = nn.Linear(internal_size, internal_size)
+        self.fc3 = nn.Linear(internal_size, D_out)
+        self.nonlin = nonlin()
+
+    def forward(self, x):
+        a1 = self.nonlin(self.fc1(x))
+        a2 = self.nonlin(self.fc2(a1))
+        return self.fc3(a2)
+
+
 class ARBlock(nn.Module):
     def __init__(self, D_in, k_size, dilation, nonlin=torch.nn.ReLU,
                  internal_size=512, external_size=1024):
@@ -65,13 +81,16 @@ class CNNDecoder(nn.Module):
         for i, dilation in enumerate(layers_list):
             self._blocks.append(
                 ARBlock(
-                    embed_dim + z_dim if i == 0 else external_size,
+                    # embed_dim + z_dim if i == 0 else external_size,
+                    2*embed_dim if i == 0 else external_size,
                     k_size, dilation,
                     internal_size=internal_size, external_size=external_size
                 )
             )
         self.blocks = nn.Sequential(*self._blocks)
         self.pred_word = nn.Conv1d(external_size, vocab_size, 1)
+        self.mlp = MLP(z_dim, embed_dim)
+
 
     def forward(self, x, z):
         """
@@ -87,8 +106,12 @@ class CNNDecoder(nn.Module):
         # need to swap the axis cuz this operation only works on images
         x_dim_exp_padded = F.pad(x_dim_exp, (1, 0, 0, 0))
         x_padded = x_dim_exp_padded[:, 0, :, :]
+
+        # send z samples through MLP before input to CNN decoder
+        z_mlp = self.mlp(z)
+
         # need to copy z (num_words + 1) times in the 2nd dimension then concat to x_padded
-        z_exp = z.view(z.size(0), z.size(1), 1).expand(z.size(0), z.size(1), x.size(2) + 1)
+        z_exp = z.view(z_mlp.size(0), z_mlp.size(1), 1).expand(z_mlp.size(0), z_mlp.size(1), x.size(2) + 1)
         # concatenate z with x
         dec_input = torch.cat([x_padded, z_exp], 1)
 

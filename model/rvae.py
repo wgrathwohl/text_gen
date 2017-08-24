@@ -34,9 +34,9 @@ class RVAE(nn.Module):
         """
 
         mu, logvar, embeddings = self.encoder(data, final_inds)
-        z = self.encoder.sample_z(mu, logvar)
+        z_samples = self.encoder.sample_z(mu, logvar)
         kld = (-0.5 * torch.sum(logvar - torch.pow(mu, 2) - torch.exp(logvar) + 1, 1)).mean().squeeze()
-        out = self.decoder(embeddings, z)
+        out = self.decoder(embeddings, z_samples)
         # size is [batch_size, vocab_size, seq_length], need to flip to [batch_size, seq_length, vocab_size]
         out_perm = out.permute(0, 2, 1).contiguous()
         # squash to [batch_size * seq_length, vocab_size]

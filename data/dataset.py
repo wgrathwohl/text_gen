@@ -98,9 +98,8 @@ def pad_batch(examples):
     # ::todo:: return labels for classification
     return torch.from_numpy(batch), torch.from_numpy(final_inds), torch.from_numpy(mask)
 
-# sanity test
-#test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['text', 'categories', 'city', 'cool'])
-#test_loader = DataLoader(test_ds, batch_size=64, shuffle=True, num_workers=4, collate_fn=pad_batch)
-#for batch in test_loader:
-#    print(batch['categories'][0])
+test_ds = YelpDataset(vocab_file="yelp_data/vocab.txt", fields=['text', 'categories', 'city', 'cool'])
+test_loader = DataLoader(test_ds, batch_size=64, shuffle=True, num_workers=4, collate_fn=pad_batch)
+for batch in test_loader:
+   print(batch['categories'][0])
 
