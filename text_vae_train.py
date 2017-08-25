@@ -1,4 +1,5 @@
 from __future__ import print_function
+import pdb
 import argparse
 from model.rvae import RVAE
 import torch
@@ -139,6 +140,7 @@ def train(args, epoch, optimizer, model):
             log_value("total_loss", l, step)
             log_value("nll", n, step)
             log_value("kld", k, step)
+            pdb.set_trace()
             print("Step {} | Total Loss: {}, NLL: {}, KLD: {} ({} sec/batch)".format(idx, l, n, k, batch_time))
             for name, parameter in model.named_parameters():
                 log_value("{}/mean".format(name), parameter.mean().data[0], step)
@@ -229,7 +231,7 @@ if __name__ == "__main__":
     if args.checkpoint_path is not None:
         model = torch.load(args.checkpoint_path)
     else:
-        #model = nn.DataParallel( # ::temporary disable for testing
+        #model = nn.DataParallel(
         model = RVAE(
                 args.vocab_size, args.embedding_size, args.hidden_size,
                 args.lstm_layers, args.latent_dim, args.layer_list, args.dropout
